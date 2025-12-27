@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp - Modern Messaging</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="page auth-page active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2><i class="fas fa-comments"></i> <span data-bn="চ্যাটঅ্যাপে স্বাগতম"
+                        data-en="Welcome to ChatApp">চ্যাটঅ্যাপে স্বাগতম</span></h2>
+                <p><span data-bn="আপনার একাউন্টে লগইন করুন" data-en="Login to your account">আপনার একাউন্টে লগইন
+                        করুন</span></p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><span data-bn="ইমেইল" data-en="Email">ইমেইল</span></label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="example@email.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><span data-bn="পাসওয়ার্ড" data-en="Password">পাসওয়ার্ড</span></label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••">
+            </div>
+
+            <button onclick="login()" class="btn-primary">
+                <span data-bn="লগইন করুন" data-en="Login">লগইন করুন</span>
+            </button>
+
+            <div class="auth-switch">
+                <span data-bn="একাউন্ট নেই?" data-en="Don't have an account?">একাউন্ট নেই?</span>
+                <a href="#" onclick="showPage('registerPage')">
+                    <span data-bn="রেজিস্টার করুন" data-en="Register">রেজিস্টার করুন</span>
+                </a>
+            </div>
+
+            <div class="settings-buttons">
+                <button class="btn-icon" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i> <span data-bn="ডার্ক" data-en="Dark">ডার্ক</span>
+                </button>
+                <button class="btn-icon" onclick="toggleLanguage()">
+                    <i class="fas fa-language"></i> <span id="langBtn">English</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="registerPage" class="page auth-page">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2><i class="fas fa-user-plus"></i> <span data-bn="নতুন একাউন্ট তৈরি করুন"
+                        data-en="Create New Account">নতুন একাউন্ট তৈরি করুন</span></h2>
+                <p><span data-bn="চ্যাট শুরু করতে রেজিস্টার করুন" data-en="Register to start chatting">চ্যাট শুরু করতে
+                        রেজিস্টার করুন</span></p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><span data-bn="নাম" data-en="Name">নাম</span></label>
+                <input type="text" id="registerName" class="form-control" placeholder="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><span data-bn="ইমেইল" data-en="Email">ইমেইল</span></label>
+                <input type="email" id="registerEmail" class="form-control" placeholder="example@email.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><span data-bn="পাসওয়ার্ড" data-en="Password">পাসওয়ার্ড</span></label>
+                <input type="password" id="registerPassword" class="form-control" placeholder="••••••••">
+            </div>
+
+            <button onclick="register()" class="btn-primary">
+                <span data-bn="রেজিস্টার করুন" data-en="Register">রেজিস্টার করুন</span>
+            </button>
+
+            <div class="auth-switch">
+                <span data-bn="ইতিমধ্যে একাউন্ট আছে?" data-en="Already have an account?">ইতিমধ্যে একাউন্ট আছে?</span>
+                <a href="#" onclick="showPage('loginPage')">
+                    <span data-bn="লগইন করুন" data-en="Login">লগইন করুন</span>
+                </a>
+            </div>
+
+            <div class="settings-buttons">
+                <button class="btn-icon" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i> <span data-bn="ডার্ক" data-en="Dark">ডার্ক</span>
+                </button>
+                <button class="btn-icon" onclick="toggleLanguage()">
+                    <i class="fas fa-language"></i> <span id="langBtn2">English</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Interface Page -->
+    <div id="chatPage" class="page chat-page">
+        <div class="chat-container">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="header-top">
+                        <h4><i class="fas fa-comments"></i> ChatApp</h4>
+                        <button class="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </div>
+                    <div class="user-profile-wrapper" style="position: relative;">
+                        <div class="user-profile-compact">
+                            <div class="user-avatar-small" id="userAvatarSmall"
+                                onclick="event.stopPropagation(); uploadProfileImage()" style="cursor: pointer;"
+                                title="Change Profile Photo">
+                                <span id="avatarInitial"></span>
+                            </div>
+                            <!-- Hidden Input -->
+                            <input type="file" id="profileImageInput" accept="image/*" style="display:none;"
+                                onchange="handleProfileImageUpload(event)">
+
+                            <div class="user-info-compact" onclick="toggleProfileDropdown()"
+                                style="cursor: pointer; flex: 1;">
+                                <div class="user-name-compact" id="userNameCompact">Loading...</div>
+                                <div class="user-status-compact" id="userStatusCompact">
+                                    <div class="status-dot"></div>
+                                    <span data-bn="অনলাইন" data-en="Online">online</span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" onclick="toggleProfileDropdown()"
+                                style="color: rgba(255,255,255,0.7); margin-left: auto; font-size: 12px; cursor: pointer; padding: 5px;"></i>
+                        </div>
+                        <!-- Dropdown -->
+                        <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                            <div class="dropdown-item" onclick="showFindPeople()">
+                                <i class="fas fa-users"></i> <span data-bn="মানুষ খুঁজুন" data-en="Find People">Find
+                                    People</span>
+                            </div>
+                            <div class="dropdown-item" onclick="openAgentChat()">
+                                <i class="fas fa-robot"></i> <span data-bn="চ্যাট এজেন্ট" data-en="Chat Agent">Chat
+                                    Agent</span>
+                            </div>
+                            <div class="dropdown-item" onclick="openCustomizeModal()">
+                                <i class="fas fa-palette"></i> <span data-bn="থিম কাস্টমাইজেশন"
+                                    data-en="Customize Theme">Customize Theme</span>
+                            </div>
+                            <div class="dropdown-item danger" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span data-bn="লগআউট" data-en="Logout">Logout</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="showTab('friends')" data-tab="friends">
+                        <span data-bn="বন্ধুরা" data-en="Friends">Friends</span>
+                    </div>
+                    <div class="tab" onclick="showTab('requests')" data-tab="requests">
+                        <span data-bn="রিকোয়েস্ট" data-en="Requests">Requests</span>
+                        <span class="notification-badge" id="requestBadge" style="display:none;">0</span>
+                    </div>
+                </div>
+
+
+                <div class="search-box">
+                    <input type="text" id="searchUser" placeholder="Search..." onkeyup="filterUsers()">
+                </div>
+
+                <div class="users-list" id="usersList"></div>
+            </div>
+
+            <div class="chat-main" id="chatMain">
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-comments"></i>
+                    <h4><span data-bn="একটি চ্যাট নির্বাচন করুন" data-en="Select a chat">একটি চ্যাট নির্বাচন
+                            করুন</span>
+                    </h4>
+                    <p><span data-bn="বার্তা পাঠাতে একজন বন্ধুকে সিলেক্ট করুন"
+                            data-en="Select a friend to start messaging">বার্তা পাঠাতে একজন বন্ধুকে সিলেক্ট
+                            করুন</span>
+                    </p>
+                </div>
+
+                <!-- Find People Area -->
+                <div class="find-people-area" id="findPeopleArea" style="display: none;">
+                    <div class="find-people-header">
+                        <h2><i class="fas fa-users"></i> Discover People</h2>
+                        <div class="find-search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="findPeopleSearch" placeholder="Search for people..."
+                                onkeyup="filterFindPeople()">
+                        </div>
+                    </div>
+                    <div class="user-grid-container" id="findPeopleGrid">
+                        <!-- User Cards will be injected here -->
+                    </div>
+                </div>
+
+                <div class="chat-area" id="chatArea" style="display: none;">
+                    <div class="chat-header">
+                        <button class="btn-header d-md-none" onclick="backToUsers()" style="margin-right: 10px;">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="chat-header-avatar" id="chatAvatar"></div>
+                        <div class="chat-header-info">
+                            <h5 id="chatName"></h5>
+                            <p><span data-bn="অনলাইন" data-en="Online">অনলাইন</span></p>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div id="filePreviewArea" class="file-preview-area">
+                        <img id="previewThumbnail" class="preview-thumbnail" src="" alt="preview">
+                        <div id="previewInfo" class="preview-info">Filename.jpg</div>
+                        <button class="btn-clear-preview" onclick="clearStagedFile()"><i
+                                class="fas fa-times"></i></button>
+                    </div>
+                    <div class="chat-input-container">
+                        <!-- Attachment Menu (Hidden by default) -->
+                        <div class="attachment-menu" id="attachmentMenu">
+                            <label for="hiddenFileInput" class="attachment-option">
+                                <i class="fas fa-image"></i> Image
+                            </label>
+                            <label for="hiddenFileInput" class="attachment-option">
+                                <i class="fas fa-file"></i> File
+                            </label>
+                        </div>
+
+                        <button class="btn-attach" onclick="toggleAttachmentMenu()">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="btn-attach" onclick="openCameraModal()">
+                            <i class="fas fa-camera"></i>
+                        </button>
+
+                        <div class="chat-input-wrapper">
+                            <input type="text" id="messageInput" placeholder="Type a message..."
+                                onkeypress="handleEnter(event)">
+                            <button class="btn-send" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-modal-content settings-main">
+            <div class="settings-header">
+                <h3><i class="fas fa-cog"></i> <span data-bn="সেটিংস" data-en="Settings">সেটিংস</span></h3>
+                <button class="btn-close-modal" onclick="closeSettings()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="settings-body">
+
+
+                <div class="settings-menu-item" onclick="openCustomizeModal()">
+                    <div class="menu-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <div class="menu-text">
+                        <h5><span data-bn="কাস্টমাইজ করুন" data-en="Customize">কাস্টমাইজ করুন</span></h5>
+                        <p><span data-bn="থিম এবং রং পরিবর্তন করুন" data-en="Change theme and colors">থিম এবং রং
+                                পরিবর্তন করুন</span></p>
+                    </div>
+                    <i class="fas fa-chevron-right menu-arrow"></i>
+                </div>
+
+                <div class="settings-menu-item" onclick="toggleTheme(); closeSettings()">
+                    <div class="menu-icon">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="menu-text">
+                        <h5><span data-bn="ডার্ক মোড" data-en="Dark Mode">ডার্ক মোড</span></h5>
+                        <p><span data-bn="ডার্ক মোড চালু/বন্ধ করুন" data-en="Toggle dark mode">ডার্ক মোড চালু/বন্ধ
+                                করুন</span></p>
+                    </div>
+                    <i class="fas fa-chevron-right menu-arrow"></i>
+                </div>
+
+                <div class="settings-menu-item" onclick="toggleLanguage(); closeSettings()">
+                    <div class="menu-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <div class="menu-text">
+                        <h5><span data-bn="ভাষা পরিবর্তন করুন" data-en="Change Language">ভাষা পরিবর্তন করুন</span>
+                        </h5>
+                        <p><span data-bn="বাংলা/English" data-en="Bengali/English">বাংলা/English</span></p>
+                    </div>
+                    <i class="fas fa-chevron-right menu-arrow"></i>
+                </div>
+
+                <div class="settings-menu-item danger" onclick="logout()">
+                    <div class="menu-icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div class="menu-text">
+                        <h5><span data-bn="লগআউট" data-en="Logout">লগআউট</span></h5>
+                        <p><span data-bn="আপনার অ্যাকাউন্ট থেকে লগআউট করুন" data-en="Sign out of your account">আপনার
+                                অ্যাকাউন্ট থেকে লগআউট করুন</span></p>
+                    </div>
+                    <i class="fas fa-chevron-right menu-arrow"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customize Theme Modal -->
+    <div id="customizeModal" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-header">
+                <button class="btn-back-modal" onclick="closeCustomizeModal()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h3><i class="fas fa-palette"></i> <span data-bn="থিম কাস্টমাইজেশন" data-en="Theme Customization">থিম
+                        কাস্টমাইজেশন</span></h3>
+                <button class="btn-close-modal" onclick="closeCustomizeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="settings-body">
+                <div class="settings-section">
+                    <h5><span data-bn="রং সিলেক্ট করুন" data-en="Select Colors">রং সিলেক্ট করুন</span></h5>
+
+                    <div class="setting-item">
+                        <label><span data-bn="ব্যাকগ্রাউন্ড রং" data-en="Background Color">ব্যাকগ্রাউন্ড
+                                রং</span></label>
+                        <input type="color" id="bgColor" value="#fdfeff">
+                    </div>
+
+                    <div class="setting-item">
+                        <label><span data-bn="সেকেন্ডারি রং" data-en="Secondary Color">সেকেন্ডারি রং</span></label>
+                        <input type="color" id="secondaryBgColor" value="#fffcfc">
+                    </div>
+
+                    <div class="setting-item">
+                        <label><span data-bn="টেক্সট রং" data-en="Text Color">টেক্সট রং</span></label>
+                        <input type="color" id="textColor" value="#212529">
+                    </div>
+
+                    <div class="setting-item">
+                        <label><span data-bn="এক্সেন্ট রং" data-en="Accent Color">এক্সেন্ট রং</span></label>
+                        <input type="color" id="accentColor" value="#667eea">
+                    </div>
+
+                    <div class="setting-item">
+                        <label><span data-bn="মেসেজ রিসিভড রং" data-en="Message Received Color">মেসেজ রিসিভড
+                                রং</span></label>
+                        <input type="color" id="msgReceivedColor" value="#d8dce0">
+                    </div>
+
+                    <div class="setting-item">
+                        <label><span data-bn="মেসেজ সেন্ট রং" data-en="Message Sent Color">মেসেজ সেন্ট
+                                রং</span></label>
+                        <input type="color" id="msgSentColor" value="#667eea">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <button class="btn-default" onclick="resetTheme()">
+                    <span data-bn="ডিফল্ট" data-en="Default">ডিফল্ট</span>
+                </button>
+                <button class="btn-apply" onclick="applyTheme()">
+                    <span data-bn="প্রয়োগ করুন" data-en="Apply">প্রয়োগ করুন</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal">
+        <div class="modal-content camera-modal-content">
+            <h3>Take Photo</h3>
+            <div class="camera-preview">
+                <video id="cameraVideo" autoplay playsinline></video>
+                <canvas id="cameraCanvas" style="display:none;"></canvas>
+            </div>
+            <div class="camera-controls">
+                <button class="btn btn-secondary" onclick="closeCameraModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="capturePhoto()">Capture</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="fileInput" style="display:none;" onchange="handleFileSelect(event)">
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="confirm-modal-overlay">
+        <div class="confirm-modal">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="confirm-actions">
+                <button class="btn-confirm-no" onclick="closeConfirmModal()">No</button>
+                <button id="btnConfirmYes" class="btn-confirm-yes">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-database-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-storage-compat.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="./js/chat-agent.js"></script>
+    <script src="./js/file-sharing.js"></script>
+    <script src="./js/script.js"></script>
+</body>
+
+</html>
