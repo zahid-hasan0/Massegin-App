@@ -493,10 +493,16 @@ function backToUsers() {
     document.getElementById('chatMain').classList.remove('mobile-show');
 }
 
+// script.js এর loadMessages function replace করুন
+
 function loadMessages() {
+    if (!selectedUserId) return;
+
     const chatId = [currentUser.uid, selectedUserId].sort().join('_');
     database.ref('messages/' + chatId).on('value', snap => {
         const box = document.getElementById('chatMessages');
+        if (!box) return;
+
         box.innerHTML = '';
         const msgs = snap.val() || {};
 
@@ -511,92 +517,159 @@ function loadMessages() {
             div.className = 'message ' + (isSent ? 'sent' : 'received');
 
             let contentHtml = '';
-            if (m.type === 'image') {
-                contentHtml = `<img src="${m.content}" class="msg-image" onclick="window.open(this.src)" style="max-width:200px; border-radius:10px; cursor:pointer;">`;
-            } else if (m.type === 'audio') {
-                contentHtml = `<audio controls src="${m.content}"></audio>`;
-            } else if (m.type === 'file') {
-                contentHtml = `<a href="${m.content}" download="file" class="msg-file"><i class="fas fa-file"></i> Download File</a>`;
+
+            // Handle different message types
+            if (m.type === 'image' && m.content) {
+                contentHtml = `
+                    <img src="${m.content}" 
+                         class="msg-image" 
+                         onclick="window.open(this.src, '_blank')" 
+                         style="max-width: 250px; max-height: 300px; border-radius: 10px; cursor: pointer; display: block;"
+                         alt="Image"
+                         onerror="this.style.display='none'; this.parentElement.innerHTML+='<p>❌ Image failed to load</p>'">
+                `;
+            } else if (m.type === 'audio' && m.content) {
+                contentHtml = `
+                    <audio controls src="${m.content}" style="max-width: 250px;">
+                        Your browser does not support audio.
+                    </audio>
+                `;
+            } else if (m.type === 'file' && m.content) {
+                const fileName = m.fileName || 'Download File';
+                contentHtml = `
+                    <a href="${m.content}" 
+                       download="${fileName}" 
+                       class="msg-file" 
+                       style="display: inline-flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; text-decoration: none; color: inherit;">
+                        <i class="fas fa-file"></i> 
+                        <span>${fileName}</span>
+                    </a>
+                `;
             }
 
-            // Combine text and content if both exist? Usually sent separate or caption.
-            // If staged file was sent, it might have type != text.
-            const textHtml = m.text ? `<div>${m.text}</div>` : '';
+            // Text content (caption or regular message)
+            const textHtml = m.text ? `<div style="margin-top: ${contentHtml ? '8px' : '0'};">${m.text}</div>` : '';
 
             div.innerHTML = `
-                    <button class="btn-delete-msg-side" onclick="deleteMsg('${chatId}','${id}')" title="Delete for me"><i class="fas fa-times-circle"></i></button>
-                    <div class="message-content">
-                        <div class="message-bubble">
-                            ${contentHtml}
-                            ${textHtml}
-                        </div>
-                        <div class="message-time">${new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                    </div>`;
+                <button class="btn-delete-msg-side" 
+                        onclick="deleteMsg('${chatId}','${id}')" 
+                        title="Delete for me">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+                <div class="message-content">
+                    <div class="message-bubble">
+                        ${contentHtml}
+                        ${textHtml}
+                    </div>
+                    <div class="message-time">
+                        ${new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                </div>
+            `;
             box.appendChild(div);
         }
+
+        // Auto scroll to bottom
         box.scrollTop = box.scrollHeight;
     });
 }
 
+// script.js এর মধ্যে এই sendMessage function replace করুন
 
-async function sendMessage(type = 'text', content = null) {
-    let inputVal = "";
+async function sendMessage() {
     const input = document.getElementById('messageInput');
-    inputVal = input.value.trim();
+    const messageText = input.value.trim();
 
-    // CHECK FOR STAGED FILE AND CONVERT TO BASE64 (Database Storage)
-    if (window.stagedFile) {
-        const file = window.stagedFile;
-        // Only allow images if we are storing in DB as Base64
-        if (!file.type.startsWith('image/')) {
-            showToast("Only images are allowed for now.", "warning");
-            clearStagedFile();
-            return;
-        }
-
-        // Show processing state
-        const btn = document.querySelector('.btn-send');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-        try {
-            // Convert to Base64
-            content = await toBase64(file);
-            type = 'image';
-        } catch (err) {
-            showToast("Error processing image: " + err.message, "error");
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-            return;
-        }
-
-        // Restore button
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-
-    } else {
-        // Normal text message check
-        if (!inputVal && !content) return;
-        type = 'text';
-    }
-
+    // Check if there's staged file or text
+    if (!messageText && !window.stagedFile) return;
     if (!selectedUserId) return;
+
     const chatId = [currentUser.uid, selectedUserId].sort().join('_');
 
-    // Standard Message Push (Content is now Base64 string for images)
-    await database.ref('messages/' + chatId).push({
+    // Prepare message object
+    const messageData = {
         senderId: currentUser.uid,
         receiverId: selectedUserId,
-        text: inputVal, // Caption
-        content: content || null,
-        type: type,
         timestamp: Date.now(),
         seen: false
-    });
+    };
 
-    // Cleanup
-    input.value = '';
-    if (window.clearStagedFile) window.clearStagedFile();
+    // If there's a staged file
+    if (window.stagedFile) {
+        const file = window.stagedFile;
+
+        messageData.type = file.type; // image, audio, file
+        messageData.content = file.content; // Base64 data
+        messageData.fileName = file.name;
+        messageData.fileSize = file.size;
+        messageData.mimeType = file.mimeType;
+        messageData.text = messageText || ''; // Caption (optional)
+
+        // Show sending indicator
+        const btn = document.querySelector('.btn-send');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+
+        try {
+            await database.ref('messages/' + chatId).push(messageData);
+
+            // Clear input and staged file
+            input.value = '';
+            clearStagedFile();
+
+            // Clear the hidden file input as well
+            const fileInput = document.getElementById('hiddenFileInput');
+            if (fileInput) fileInput.value = '';
+
+            if (typeof showToast === 'function') {
+                showToast('File sent!', 'success');
+            }
+        } catch (error) {
+            console.error("Error sending file:", error);
+            if (typeof showToast === 'function') {
+                showToast('Failed to send file: ' + error.message, 'error');
+            } else {
+                alert('Failed to send file: ' + error.message);
+            }
+        } finally {
+            // Restore button
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+    } else {
+        // Regular text message
+        messageData.type = 'text';
+        messageData.text = messageText;
+
+        try {
+            await database.ref('messages/' + chatId).push(messageData);
+            input.value = '';
+        } catch (error) {
+            console.error("Error sending message:", error);
+            if (typeof showToast === 'function') {
+                showToast('Failed to send message', 'error');
+            }
+        }
+    }
+}
+
+// Enter key support
+function handleEnter(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
+}
+// Enter key support
+function handleEnter(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
 }
 
 // Helper to convert File to Base64
@@ -793,36 +866,58 @@ function closeCameraModal() {
     video.srcObject = null;
 }
 
+// script.js এর capturePhoto function replace করুন
+
 function capturePhoto() {
     const video = document.getElementById('cameraVideo');
     const canvas = document.getElementById('cameraCanvas');
-    if (!cameraStream) return;
 
+    if (!cameraStream || !video || !canvas) return;
+
+    // Set canvas size to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
 
-    canvas.toBlob(blob => {
-        // Create a File object
-        const file = new File([blob], `photo_${Date.now()}.png`, { type: 'image/png' });
+    // Draw video frame to canvas
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
 
-        // Use existing File Sharing Logic
-        // We simulate simple file selection
-        // Stage File
-        stagedFile = file;
-        const previewArea = document.getElementById('filePreviewArea');
-        const previewImg = document.getElementById('previewThumbnail');
-        const previewName = document.getElementById('previewInfo');
+    // Convert to Base64
+    const base64Image = canvas.toDataURL('image/jpeg', 0.8);
 
-        previewImg.src = URL.createObjectURL(file);
+    // Stage the image (same as file selection)
+    window.stagedFile = {
+        type: 'image',
+        content: base64Image,
+        name: `photo_${Date.now()}.jpg`,
+        size: base64Image.length,
+        mimeType: 'image/jpeg'
+    };
+
+    // Show preview
+    const previewArea = document.getElementById('filePreviewArea');
+    const previewImg = document.getElementById('previewThumbnail');
+    const previewInfo = document.getElementById('previewInfo');
+
+    if (previewArea && previewImg && previewInfo) {
+        previewImg.src = base64Image;
         previewImg.style.display = 'block';
-        previewName.textContent = "Captured Photo";
+        previewImg.style.backgroundColor = 'transparent';
+        previewInfo.textContent = "Captured Photo";
         previewArea.style.display = 'flex';
+    }
 
-        closeCameraModal();
-    }, 'image/png');
+    // Close camera modal
+    closeCameraModal();
+
+    // Focus message input
+    const msgInput = document.getElementById('messageInput');
+    if (msgInput) msgInput.focus();
+
+    if (typeof showToast === 'function') {
+        showToast('Photo captured! Add a caption and send.', 'success');
+    }
 }
-
 
 function applyThemeColors(theme) {
     document.documentElement.style.setProperty('--bg-primary', theme.bgPrimary);

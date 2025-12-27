@@ -1,39 +1,53 @@
-
-// File Sharing Logic
+// File Sharing Logic (Base64)
 
 function triggerFileSelect(type) {
-    const input = document.getElementById('fileInput');
+    const input = document.getElementById('hiddenFileInput');
+    if (!input) return;
+
     // Set accept attribute based on type
     if (type === 'image') input.accept = "image/*";
     else if (type === 'audio') input.accept = "audio/*";
     else input.accept = "*/*";
 
     input.setAttribute('data-type', type);
-    input.click();
+    // Label will trigger the input automatically, no need for input.click()
 }
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
+    const input = event.target;
+
     if (!file) return;
 
-    // Size Limit: 500KB (example) to prevent large DB payloads
-    if (file.size > 500 * 1024) {
-        showToast("File too large! Max 500KB.", 'error');
-        document.getElementById('fileInput').value = ''; // Reset
+    // Clear any existing staged file first
+    if (window.stagedFile) {
+        clearStagedFile();
+    }
+
+    // Size Limit: 2MB
+    if (file.size > 2 * 1024 * 1024) {
+        if (typeof showToast === 'function') {
+            showToast("File too large! Max 2MB.", 'error');
+        } else {
+            alert("File too large! Max 2MB.");
+        }
+        event.target.value = '';
         return;
     }
 
-    const type = document.getElementById('fileInput').getAttribute('data-type') || 'file'; // image, audio, file
+    const type = event.target.getAttribute('data-type') || 'file';
 
     const reader = new FileReader();
     reader.onload = function (e) {
         const base64 = e.target.result;
 
-        // STAGING: Do NOT send immediately. Store and Preview.
+        // Stage the file
         window.stagedFile = {
             type: type,
             content: base64,
-            name: file.name
+            name: file.name,
+            size: file.size,
+            mimeType: file.type
         };
 
         renderFilePreview(file.name, type, base64);
@@ -42,10 +56,26 @@ function handleFileSelect(event) {
         const menu = document.getElementById('attachmentMenu');
         if (menu) menu.style.display = 'none';
 
-        // Focus input so user can just hit enter
-        document.getElementById('messageInput').focus();
+        // Focus input
+        const msgInput = document.getElementById('messageInput');
+        if (msgInput) msgInput.focus();
     };
+
+    reader.onerror = function () {
+        if (typeof showToast === 'function') {
+            showToast("Error reading file!", 'error');
+        } else {
+            alert("Error reading file!");
+        }
+        input.value = ''; // Clear input
+    };
+
     reader.readAsDataURL(file);
+
+    // IMPORTANT: Clear input after reading so same file can be selected again
+    setTimeout(() => {
+        input.value = '';
+    }, 100);
 }
 
 function renderFilePreview(name, type, base64) {
@@ -53,41 +83,59 @@ function renderFilePreview(name, type, base64) {
     const thumb = document.getElementById('previewThumbnail');
     const info = document.getElementById('previewInfo');
 
-    if (!area) return; // Should be in DOM
+    if (!area || !thumb || !info) return;
+
+    thumb.style.display = 'block';
 
     if (type === 'image') {
         thumb.src = base64;
+        thumb.style.backgroundColor = 'transparent';
     } else if (type === 'audio') {
-        thumb.src = ''; // Placeholder or icon?
+        thumb.src = '';
         thumb.style.backgroundColor = '#667eea';
-        // We could set a dummy icon here if needed via CSS or JS, but let's keep it simple
+        thumb.alt = '🎵 Audio';
     } else {
         thumb.src = '';
         thumb.style.backgroundColor = '#ccc';
+        thumb.alt = '📎 File';
     }
 
     info.textContent = name;
-    area.classList.add('active');
+    area.style.display = 'flex';
 }
 
 function clearStagedFile() {
     window.stagedFile = null;
     const area = document.getElementById('filePreviewArea');
-    if (area) area.classList.remove('active');
-    document.getElementById('fileInput').value = '';
+    const input = document.getElementById('hiddenFileInput');
+    const thumb = document.getElementById('previewThumbnail');
+
+    if (area) area.style.display = 'none';
+    if (input) input.value = '';
+    if (thumb) {
+        thumb.src = '';
+        thumb.style.display = 'none';
+    }
 }
 
-// Toggle attachment menu
 function toggleAttachmentMenu() {
     const menu = document.getElementById('attachmentMenu');
-    menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+    if (!menu) return;
+
+    const isVisible = menu.style.display === 'flex';
+    menu.style.display = isVisible ? 'none' : 'flex';
 }
 
 // Close menu on outside click
-window.addEventListener('click', (e) => {
+document.addEventListener('click', function (e) {
     const menu = document.getElementById('attachmentMenu');
     const btn = document.getElementById('btnAttachment');
-    if (menu && menu.style.display === 'flex' && !menu.contains(e.target) && !btn.contains(e.target)) {
+
+    if (!menu || !btn) return;
+
+    if (menu.style.display === 'flex' &&
+        !menu.contains(e.target) &&
+        !btn.contains(e.target)) {
         menu.style.display = 'none';
     }
 });

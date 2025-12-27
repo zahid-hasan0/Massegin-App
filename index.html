@@ -212,26 +212,33 @@
                         </div>
                     </div>
                     <div class="chat-messages" id="chatMessages"></div>
+                    <!-- Hidden File Input (label for + JS দুটোই কাজ করবে) -->
+                    <input type="file" id="hiddenFileInput" style="display:none" onchange="handleFileSelect(event)">
+
                     <div id="filePreviewArea" class="file-preview-area">
                         <img id="previewThumbnail" class="preview-thumbnail" src="" alt="preview">
                         <div id="previewInfo" class="preview-info">Filename.jpg</div>
-                        <button class="btn-clear-preview" onclick="clearStagedFile()"><i
-                                class="fas fa-times"></i></button>
+                        <button class="btn-clear-preview" onclick="clearStagedFile()">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
+
                     <div class="chat-input-container">
                         <!-- Attachment Menu (Hidden by default) -->
-                        <div class="attachment-menu" id="attachmentMenu">
-                            <label for="hiddenFileInput" class="attachment-option">
+                        <div class="attachment-menu" id="attachmentMenu" style="display:none">
+                            <label for="hiddenFileInput" class="attachment-option" onclick="triggerFileSelect('image')">
                                 <i class="fas fa-image"></i> Image
                             </label>
-                            <label for="hiddenFileInput" class="attachment-option">
+
+                            <label for="hiddenFileInput" class="attachment-option" onclick="triggerFileSelect('file')">
                                 <i class="fas fa-file"></i> File
                             </label>
                         </div>
 
-                        <button class="btn-attach" onclick="toggleAttachmentMenu()">
+                        <button class="btn-attach" id="btnAttachment" onclick="toggleAttachmentMenu()">
                             <i class="fas fa-paperclip"></i>
                         </button>
+
                         <button class="btn-attach" onclick="openCameraModal()">
                             <i class="fas fa-camera"></i>
                         </button>
@@ -244,6 +251,7 @@
                             </button>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>

@@ -21,7 +21,8 @@
 /* Attachment Menu */
 .attachment-menu {
     position: absolute;
-    bottom: 50px;
+    bottom: 80px;
+    padding: 10px;
     /* Adjust as needed relative to chat-input */
     left: 20px;
     background: var(--bg-secondary);
@@ -32,6 +33,7 @@
     overflow: hidden;
     z-index: 1000;
     /* High z-index */
+
 }
 
 .file-preview-area {
@@ -45,11 +47,12 @@
 
 .file-preview-area.active {
     display: flex;
+    gap: 20px;
 }
 
 .preview-thumbnail {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 8px;
     object-fit: cover;
     background: #ccc;
@@ -70,23 +73,26 @@
 }
 
 .attachment-menu div {
-    padding: 12px 20px;
+    padding: 10px 30px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 10px;
     color: var(--text-primary);
     font-weight: 500;
+
 }
 
 .attachment-menu div:hover {
     background: var(--hover-bg);
+
 }
 
 .attachment-menu i {
     width: 20px;
     text-align: center;
     color: var(--accent-color);
+
 }
 
 .btn-send.secondary {
